@@ -14,6 +14,7 @@ from tabulate import _format_table as default_format
 TERMINAL = Terminal()
 ASC_PATTERN = re.compile('(Acc)|(Prec)', re.I)
 DESC_PATTERN = re.compile('(Logloss)|(entropy)|(ce)', re.I)
+CLEAR = '\033[K'
 
 
 def predict_target_direction(name):
@@ -40,7 +41,6 @@ class Table:
     def __init__(self):
         self.columns = None
         self.rows = []
-        self.prev = ''
         atexit.register(self.cleanup)
         tabulate._format_table = self._format_table
         self.default_stdout_write = sys.stdout.write
@@ -48,13 +48,13 @@ class Table:
 
     def patched_write(self, q):
         if TERMINAL.is_a_tty:
-            self.default_stdout_write(q + '\033[K')
+            self.default_stdout_write(q + CLEAR)
             tt = self.get()
             self.default_stdout_write('\n' + tt + '\n' + (TERMINAL.move_up * self.height()) + TERMINAL.move_up)
         else:
             self.default_stdout_write(q)
 
-    def _format_table(self, fmt, headers, rows, colwidths, colaligns, is_multiline):
+    def _modify_rows(self, rows):
         n_columns = len(rows[0])
         n_lines = len(rows)
 
@@ -78,9 +78,13 @@ class Table:
                 if direction == 0:
                     color = Fore.WHITE
 
-                m_row.append(color + col[i] + Style.RESET_ALL)
+                m_row.append(color + str(col[i]) + Style.RESET_ALL)
             modified_rows.append(m_row)
         rows = list(map(list, zip(*modified_rows)))
+        return rows
+
+    def _format_table(self, fmt, headers, rows, colwidths, colaligns, is_multiline):
+        rows = self._modify_rows(rows)
         r = default_format(fmt, headers, rows, colwidths, colaligns, is_multiline)
 
         return r
@@ -89,23 +93,35 @@ class Table:
         row = flatten_dict(row)
         if self.columns is None:
             self.columns = list(row.keys())
-        row = row.values()
+        row = list(row.values())
         if len(row) != len(self.columns):
             raise Exception('Number of columns mismatch: {} != {}'.format(len(self.columns), len(row)))
 
         self.rows.append(row)
         t = tabulate.tabulate(self.rows, headers=self.columns, tablefmt='psql')
-        self.prev = t
 
     def print(self):
         if TERMINAL.is_a_tty:
             self.default_stdout_write('\n' + self.get() + '\n' + (TERMINAL.move_up * self.height()) + TERMINAL.move_up)
 
+    def clear(self):
+        self.default_stdout_write(('\n' + CLEAR) * self.height() + TERMINAL.move_up * self.height())
+
+    def _get(self, max_height=14):
+        rows = self._modify_rows(self.rows)
+        prefix = rows[:max_height // 2]
+        suffix = rows[-max_height // 2:]
+        sep = ['...' for r in rows]
+        t = prefix + [sep] + suffix
+        t = tabulate.tabulate(t, headers=self.columns, tablefmt='psql')
+        return t
+
     def get(self):
-        return self.prev
+        self.clear()
+        return self._get()
 
     def height(self):
-        return len(self.prev.split('\n'))
+        return len(self._get().split('\n'))
 
     def to_html():
         pass
