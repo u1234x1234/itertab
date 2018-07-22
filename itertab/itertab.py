@@ -81,7 +81,7 @@ class Table:
         sys.stdout.write = self.patched_write
 
     @staticmethod
-    def add_print(row):
+    def update(row):
         global TABLE
         if TABLE is None:
             TABLE = Table()
@@ -122,9 +122,9 @@ class Table:
     def clear(self):
         self.default_stdout_write(('\n' + CLEAR) * self.height() + TERMINAL.move_up * self.height())
 
-    def _get(self, max_height=14):
+    def _get(self, max_height=None):
         rows = _modify_rows(self.rows, self.columns)
-        if len(rows) > max_height:
+        if max_height is not None and len(rows) > max_height:
             prefix = rows[:max_height // 2]
             suffix = rows[-max_height // 2:]
             sep = ['...' for r in rows]
