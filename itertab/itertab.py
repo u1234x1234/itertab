@@ -32,11 +32,43 @@ def flatten_dict(d):
         for key, value in d.items():
             if isinstance(value, dict):
                 for subkey, subvalue in flatten_dict(value).items():
-                    yield key + '_' + subkey, subvalue
+                    yield str(key) + '_' + str(subkey), subvalue
             else:
-                yield key, value
+                yield str(key), value
 
     return dict(items())
+
+
+def _modify_rows(rows, headers):
+    n_columns = len(rows[0])
+    n_lines = len(rows)
+    assert len(headers) == n_columns
+
+    modified_rows = []
+    for col_idx in range(n_columns):
+        col = [v[col_idx] for v in rows]
+        try:
+            float_column = np.array(col, dtype=np.float32)
+        except ValueError as e:
+            modified_rows.append(col)
+            continue
+
+        m_row = [col[0]]
+        for i in range(1, len(float_column)):
+            is_gt = float_column[i] > float_column[i - 1]
+            if isinstance(is_gt, np.ndarray):
+                is_gt = is_gt.all()
+            direction = predict_target_direction(headers[col_idx])
+            value = str(col[i])
+            if (is_gt and direction == 1) or (not is_gt and direction == -1):
+                value = Fore.GREEN + str(value) + Style.RESET_ALL
+            elif (not is_gt and direction == 1) or (is_gt and direction == -1):
+                value = Fore.RED + str(value) + Style.RESET_ALL
+
+            m_row.append(value)
+        modified_rows.append(m_row)
+    rows = list(map(list, zip(*modified_rows)))
+    return rows
 
 
 class Table:
@@ -63,36 +95,8 @@ class Table:
         else:
             self.default_stdout_write(q)
 
-    def _modify_rows(self, rows):
-        n_columns = len(rows[0])
-        n_lines = len(rows)
-
-        modified_rows = []
-        for col_idx in range(n_columns):
-            col = [v[col_idx] for v in rows]
-            try:
-                float_column = np.array(col, dtype=np.float32)
-            except ValueError as e:
-                modified_rows.append(col)
-                continue
-
-            m_row = [col[0]]
-            for i in range(1, len(float_column)):
-                is_gt = float_column[i] > float_column[i - 1]
-                direction = predict_target_direction(self.columns[col_idx])
-                value = str(col[i])
-                if (is_gt and direction == 1) or (not is_gt and direction == -1):
-                    value = Fore.GREEN + str(value) + Style.RESET_ALL
-                elif (not is_gt and direction == 1) or (is_gt and direction == -1):
-                    value = Fore.RED + str(value) + Style.RESET_ALL
-
-                m_row.append(value)
-            modified_rows.append(m_row)
-        rows = list(map(list, zip(*modified_rows)))
-        return rows
-
     def _format_table(self, fmt, headers, rows, colwidths, colaligns, is_multiline):
-        rows = self._modify_rows(rows)
+        rows = _modify_rows(rows, self.columns)
         r = default_format(fmt, headers, rows, colwidths, colaligns, is_multiline)
         return r
 
@@ -119,7 +123,7 @@ class Table:
         self.default_stdout_write(('\n' + CLEAR) * self.height() + TERMINAL.move_up * self.height())
 
     def _get(self, max_height=14):
-        rows = self._modify_rows(self.rows)
+        rows = _modify_rows(self.rows, self.columns)
         if len(rows) > max_height:
             prefix = rows[:max_height // 2]
             suffix = rows[-max_height // 2:]
