@@ -49,11 +49,11 @@ class Table:
         sys.stdout.write = self.patched_write
 
     @staticmethod
-    def add_print1(row):
+    def add_print(row):
         global TABLE
         if TABLE is None:
             TABLE = Table()
-        TABLE.add_print(row)
+        TABLE._add_print(row)
 
     def patched_write(self, q):
         if TERMINAL.is_a_tty:
@@ -94,7 +94,6 @@ class Table:
     def _format_table(self, fmt, headers, rows, colwidths, colaligns, is_multiline):
         rows = self._modify_rows(rows)
         r = default_format(fmt, headers, rows, colwidths, colaligns, is_multiline)
-
         return r
 
     def add_row(self, row):
@@ -108,13 +107,13 @@ class Table:
         self.rows.append(row)
         t = tabulate.tabulate(self.rows, headers=self.columns, tablefmt='psql')
 
-    def print(self):
+    def _print(self):
         if TERMINAL.is_a_tty:
             self.default_stdout_write('\n' + self.get() + '\n' + (TERMINAL.move_up * self.height()) + TERMINAL.move_up)
 
-    def add_print(self, row):
+    def _add_print(self, row):
         self.add_row(row)
-        self.print()
+        self._print()
 
     def clear(self):
         self.default_stdout_write(('\n' + CLEAR) * self.height() + TERMINAL.move_up * self.height())
