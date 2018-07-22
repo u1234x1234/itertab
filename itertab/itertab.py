@@ -12,9 +12,11 @@ from tabulate import _format_table as default_format
 
 
 TERMINAL = Terminal()
-ASC_PATTERN = re.compile('(Acc)|(Prec)', re.I)
-DESC_PATTERN = re.compile('(Logloss)|(entropy)|(ce)', re.I)
+ASC_PATTERN = re.compile('(?=Acc)|(?=Prec)', re.I)
+DESC_PATTERN = re.compile('(?=logloss)|(?=entropy)|(?=ce)', re.I)
 CLEAR = '\033[K'
+
+TABLE = None
 
 
 def predict_target_direction(name):
@@ -46,6 +48,13 @@ class Table:
         self.default_stdout_write = sys.stdout.write
         sys.stdout.write = self.patched_write
 
+    @staticmethod
+    def add_print1(row):
+        global TABLE
+        if TABLE is None:
+            TABLE = Table()
+        TABLE.add_print(row)
+
     def patched_write(self, q):
         if TERMINAL.is_a_tty:
             self.default_stdout_write(q + CLEAR)
@@ -71,14 +80,13 @@ class Table:
             for i in range(1, len(float_column)):
                 is_gt = float_column[i] > float_column[i - 1]
                 direction = predict_target_direction(self.columns[col_idx])
-                if (is_gt and direction == 1) or (not is_gt and direction == -1):  # TODO ==
-                    color = Fore.GREEN
-                else:
-                    color = Fore.RED
-                if direction == 0:
-                    color = Fore.WHITE
+                value = str(col[i])
+                if (is_gt and direction == 1) or (not is_gt and direction == -1):
+                    value = Fore.GREEN + str(value) + Style.RESET_ALL
+                elif (not is_gt and direction == 1) or (is_gt and direction == -1):
+                    value = Fore.RED + str(value) + Style.RESET_ALL
 
-                m_row.append(color + str(col[i]) + Style.RESET_ALL)
+                m_row.append(value)
             modified_rows.append(m_row)
         rows = list(map(list, zip(*modified_rows)))
         return rows
@@ -104,15 +112,22 @@ class Table:
         if TERMINAL.is_a_tty:
             self.default_stdout_write('\n' + self.get() + '\n' + (TERMINAL.move_up * self.height()) + TERMINAL.move_up)
 
+    def add_print(self, row):
+        self.add_row(row)
+        self.print()
+
     def clear(self):
         self.default_stdout_write(('\n' + CLEAR) * self.height() + TERMINAL.move_up * self.height())
 
     def _get(self, max_height=14):
         rows = self._modify_rows(self.rows)
-        prefix = rows[:max_height // 2]
-        suffix = rows[-max_height // 2:]
-        sep = ['...' for r in rows]
-        t = prefix + [sep] + suffix
+        if len(rows) > max_height:
+            prefix = rows[:max_height // 2]
+            suffix = rows[-max_height // 2:]
+            sep = ['...' for r in rows]
+            t = prefix + [sep] + suffix
+        else:
+            t = rows
         t = tabulate.tabulate(t, headers=self.columns, tablefmt='psql')
         return t
 
@@ -130,5 +145,5 @@ class Table:
         pass
 
     def cleanup(self):
-        self.default_stdout_write(TERMINAL.move_down * self.height() + '\n')
+        self.default_stdout_write(TERMINAL.move_down * self.height() + ('\n' + CLEAR))
         sys.stdout.write = self.default_stdout_write
