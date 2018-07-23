@@ -3,6 +3,7 @@ import atexit
 import os
 import re
 import sys
+from datetime import datetime
 
 import numpy as np
 import tabulate
@@ -15,8 +16,6 @@ TERMINAL = Terminal()
 ASC_PATTERN = re.compile('(?=Acc)|(?=Prec)', re.I)
 DESC_PATTERN = re.compile('(?=logloss)|(?=entropy)|(?=ce)', re.I)
 CLEAR = '\033[K'
-
-TABLE = None
 
 
 def predict_target_direction(name):
@@ -72,20 +71,17 @@ def _modify_rows(rows, headers):
 
 
 class Table:
-    def __init__(self):
+    def __init__(self, auto_datetime_fmt=None):
         self.columns = None
         self.rows = []
+        self.auto_datetime_fmt = auto_datetime_fmt
         atexit.register(self.cleanup)
         tabulate._format_table = self._format_table
         self.default_stdout_write = sys.stdout.write
         sys.stdout.write = self.patched_write
 
-    @staticmethod
-    def update(row):
-        global TABLE
-        if TABLE is None:
-            TABLE = Table()
-        TABLE._add_print(row)
+    def update(self, row):
+        self._add_print(row)
 
     def patched_write(self, q):
         if TERMINAL.is_a_tty:
@@ -102,13 +98,17 @@ class Table:
 
     def add_row(self, row):
         row = flatten_dict(row)
-        if self.columns is None:
-            self.columns = list(row.keys())
-        row = list(row.values())
-        if len(row) != len(self.columns):
-            raise Exception('Number of columns mismatch: {} != {}'.format(len(self.columns), len(row)))
+        if self.auto_datetime_fmt:
+            row = {'dt': str(datetime.now().strftime(self.auto_datetime_fmt)), **row}
 
-        self.rows.append(row)
+        keys, values = list(row.keys()), list(row.values())
+
+        if self.columns is None:
+            self.columns = keys
+        if len(values) != len(self.columns):
+            raise Exception('Number of columns mismatch: {} != {}'.format(len(self.columns), len(values)))
+
+        self.rows.append(values)
         t = tabulate.tabulate(self.rows, headers=self.columns, tablefmt='psql')
 
     def _print(self):
