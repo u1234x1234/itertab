@@ -123,6 +123,8 @@ class Table:
         self.default_stdout_write(('\n' + CLEAR) * self.height() + TERMINAL.move_up * self.height())
 
     def _get(self, max_height=None):
+        if len(self.rows) == 0:
+            return ''
         rows = _modify_rows(self.rows, self.columns)
         if max_height is not None and len(rows) > max_height:
             prefix = rows[:max_height // 2]
