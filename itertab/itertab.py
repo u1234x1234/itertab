@@ -13,8 +13,8 @@ from tabulate import _format_table as default_format
 
 
 TERMINAL = Terminal()
-ASC_PATTERN = re.compile('(?=Acc)|(?=Prec)', re.I)
-DESC_PATTERN = re.compile('(?=logloss)|(?=entropy)|(?=ce)', re.I)
+ASC_PATTERN = re.compile('(?=acc)|(?=prec)|(?=recall)|(?=f1)', re.I)
+DESC_PATTERN = re.compile('(?=loss)|(?=entropy)|(?=ce)|(?=divergence)', re.I)
 CLEAR = '\033[K'
 
 
