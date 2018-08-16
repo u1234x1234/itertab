@@ -6,6 +6,7 @@ import sys
 from datetime import datetime
 
 import numpy as np
+import pandas as pd
 import tabulate
 from blessings import Terminal
 from colorama import Back, Fore, Style
@@ -145,6 +146,10 @@ class Table:
 
     def to_html():
         pass
+
+    def to_csv(self, path):
+        df = pd.DataFrame(self.rows, columns=self.columns)
+        df.to_csv(path, index=False)
 
     def plot():
         pass

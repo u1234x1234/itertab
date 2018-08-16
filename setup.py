@@ -16,7 +16,7 @@ setup(
     keywords="",
     url="https://github.com/u1234x1234/itertab",
     packages=['itertab'],
-    install_requires=['colorama', 'blessings', 'numpy', 'tabulate'],
+    install_requires=['colorama', 'blessings', 'numpy', 'tabulate', 'pandas'],
     long_description=read('README.md'),
     classifiers=[
         "Development Status :: 3 - Alpha",
