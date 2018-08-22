@@ -46,24 +46,45 @@ def _modify_rows(rows, headers):
 
     modified_rows = []
     for col_idx in range(n_columns):
+        direction = predict_target_direction(headers[col_idx])
         col = [v[col_idx] for v in rows]
         try:
             float_column = np.array(col, dtype=np.float32)
         except ValueError as e:
             modified_rows.append(col)
             continue
+        if direction == 0:
+            modified_rows.append(col)
+            continue
 
         m_row = [col[0]]
+        min_idx = np.argmin(float_column)
+        max_idx = np.argmax(float_column)
+
         for i in range(1, len(float_column)):
             is_gt = float_column[i] > float_column[i - 1]
             if isinstance(is_gt, np.ndarray):
                 is_gt = is_gt.all()
-            direction = predict_target_direction(headers[col_idx])
+
             value = str(col[i])
+            fore_modifier = None
             if (is_gt and direction == 1) or (not is_gt and direction == -1):
-                value = Fore.GREEN + str(value) + Style.RESET_ALL
+                fore_modifier = Fore.GREEN
             elif (not is_gt and direction == 1) or (is_gt and direction == -1):
-                value = Fore.RED + str(value) + Style.RESET_ALL
+                fore_modifier = Fore.RED
+
+            background_modifier = None
+            if i == min_idx:
+                background_modifier = Back.RED if direction == 1 else Back.GREEN
+            if i == max_idx:
+                background_modifier = Back.GREEN if direction == 1 else Back.RED
+
+            if background_modifier:
+                value = background_modifier + value + Style.RESET_ALL
+                fore_modifier = None
+
+            if fore_modifier:
+                value = fore_modifier + value + Style.RESET_ALL
 
             m_row.append(value)
         modified_rows.append(m_row)
