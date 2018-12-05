@@ -1,12 +1,9 @@
 # -*- coding: utf-8 -*-
 import atexit
 import os
-import re
 import sys
 from datetime import datetime
 
-import numpy as np
-import pandas as pd
 import tabulate
 from blessings import Terminal
 
