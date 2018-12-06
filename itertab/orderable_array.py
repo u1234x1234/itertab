@@ -47,5 +47,6 @@ class OrderableArray:
                 colorized_array.append(modifiers_map[fl] + val + Style.RESET_ALL)
             else:
                 colorized_array.append(val)
+        # TODO colorize min, max
 
         return colorized_array
