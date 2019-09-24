@@ -5,10 +5,10 @@ from itertab.utils import flatten_dict
 
 def test_order_matcher():
     matcher = OrderMatcher()
-    assert matcher.predict('Accuracy') == 1
-    assert matcher.predict('Discriminator_loss') == -1
-    assert matcher.predict('dt') == 0
-    assert matcher.predict('ROC-AUC') == 1
+    assert matcher.predict('Accuracy') == 'asc'
+    assert matcher.predict('Discriminator_loss') == 'desc'
+    assert matcher.predict('dt') == None
+    assert matcher.predict('ROC-AUC') == 'asc'
 
 
 def test_flatten_dict():

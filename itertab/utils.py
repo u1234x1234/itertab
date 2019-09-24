@@ -10,7 +10,7 @@ def flatten_dict(d):
             else:
                 yield str(key), value
 
-    return dict(items()) 
+    return dict(items())
 
 
 def _words_matcher(words):
@@ -31,7 +31,7 @@ class OrderMatcher:
         """Predict whether the `name` matches ascending or descending orders of improvements
         """
         if self._asc_pattern_matcher.findall(name):
-            return 1
+            return 'asc'
         if self._desc_pattern_matcher.findall(name):
-            return -1
-        return 0
+            return 'desc'
+        return None

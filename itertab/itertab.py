@@ -10,7 +10,6 @@ from blessings import Terminal
 from .pretty_table import PrettyTable
 
 TERMINAL = Terminal()
-
 CLEAR = '\033[K'
 
 
@@ -53,10 +52,10 @@ class Table:
 
     def get(self):
         self.clear()
-        return self._table._get()
+        return self._table.get()
 
     def height(self):
-        return len(self._table._get().split('\n'))
+        return len(self._table.get().split('\n'))
 
     def to_csv(self, filename):
         self._table.to_csv(filename)
