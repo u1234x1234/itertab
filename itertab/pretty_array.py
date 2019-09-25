@@ -21,7 +21,7 @@ def is_int(value):
             return True
     except ValueError as e:
         pass
-    
+
     return False
 
 
@@ -129,6 +129,9 @@ class PrettyArray:
             colorized_array.append(val)
 
         return colorized_array
+
+    def get_raw_array(self):
+        return self._raw_values
 
     def _cleanup(self):
         sys.stdout.write(Style.RESET_ALL)

@@ -1,14 +1,16 @@
-import numpy as np
-import tabulate
 from datetime import datetime
-from tabulate import _format_table as default_format
+
+import numpy as np
+import pandas as pd
+from tabulate import tabulate
+from blessings import Terminal
 
 from .pretty_array import PrettyArray
 from .utils import OrderMatcher, flatten_dict
 
 
 class PrettyTable:
-    """A pretty formatted table with colorized columns and highlighting.
+    """A pretty formatted table with colorized columns and cell highlighting.
     """
 
     def __init__(self, tablefmt='psql', auto_datetime_fmt='%Y-%m-%d %H:%M:%S', headers=[]):
@@ -19,6 +21,7 @@ class PrettyTable:
 
         self._headers = headers
         self._columns = dict()
+        self._terminal = Terminal()
 
     def add_row(self, row):
         row = flatten_dict(row)
@@ -34,10 +37,23 @@ class PrettyTable:
 
         [self._columns[key].add(value) for key, value in row.items()]
 
-    def get(self):
+    def add_rows(self, rows):
+        for row in rows:
+            self.add_row(row)
+
+    def get_string_representation(self):
         rows = np.array([self._columns[key].get_colorized() for key in self._headers]).T
-        t = tabulate.tabulate(rows, headers=self._headers, tablefmt=self.tablefmt)
-        return t
+        table_str = tabulate(rows, headers=self._headers, tablefmt=self.tablefmt)
+        return table_str
+
+    def to_csv(self, path):
+        rows = np.array([self._columns[key].get_raw_array() for key in self._headers]).T
+        data_frame = pd.DataFrame(rows, columns=self._headers)
+        data_frame.to_csv(path, index=False)
+
+    def clear_screen_and_print(self):
+        print(self._terminal.clear, flush=True)
+        print(self)
 
     def __str__(self):
-        return self.get()
+        return self.get_string_representation()

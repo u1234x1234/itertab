@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 import atexit
-import os
 import sys
-from datetime import datetime
 
-import tabulate
 from blessings import Terminal
 
 from .pretty_table import PrettyTable
@@ -14,16 +11,14 @@ CLEAR = '\033[K'
 
 
 class Table(PrettyTable):
-    def __init__(self, auto_datetime_fmt=None):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, args, kwargs)
+
         self._table = PrettyTable()
 
-        self.auto_datetime_fmt = auto_datetime_fmt
         atexit.register(self.cleanup)
         self.default_stdout_write = sys.stdout.write
         sys.stdout.write = self.patched_write
-
-    def update(self, row):
-        self._add_print(row)
 
     def patched_write(self, q):
         if TERMINAL.is_a_tty:
@@ -49,10 +44,10 @@ class Table(PrettyTable):
 
     def get(self):
         self.clear()
-        return self._table.get()
+        return self._table.get_string_representation()
 
     def height(self):
-        return len(self._table.get().split('\n'))
+        return len(self._table.get_string_representation().split('\n'))
 
     def cleanup(self):
         self.default_stdout_write(TERMINAL.move_down * self.height() + ('\n' + CLEAR))
