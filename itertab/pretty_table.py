@@ -12,14 +12,13 @@ from .utils import OrderMatcher, flatten_dict
 class PrettyTable:
     """A pretty formatted table with colorized columns and cell highlighting.
     """
-
-    def __init__(self, tablefmt='psql', auto_datetime_fmt='%Y-%m-%d %H:%M:%S', headers=[]):
+    def __init__(self, tablefmt='psql', auto_datetime_fmt='%Y-%m-%d %H:%M:%S', headers=None):
         self.tablefmt = tablefmt
         self.auto_datetime_fmt = auto_datetime_fmt
 
         self._order_matcher = OrderMatcher()
 
-        self._headers = headers
+        self._headers = headers if headers is not None else []
         self._columns = dict()
         self._terminal = Terminal()
 
@@ -32,8 +31,8 @@ class PrettyTable:
         for key in row.keys():
             if key not in self._headers:
                 self._headers.append(key)
-                guessed_direction = self._order_matcher.predict(key)
-                self._columns[key] = PrettyArray(direction=guessed_direction)
+                predicted_direction = self._order_matcher.predict(key)
+                self._columns[key] = PrettyArray(direction=predicted_direction)
 
         [self._columns[key].add(value) for key, value in row.items()]
 
