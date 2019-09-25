@@ -1,9 +1,10 @@
 
+
 <div align="center" text-align="center">
   <img src="media/demo.gif" itle="itertab">
   <h2> itertab: pretty printed table </h2>
   <a href='https://coveralls.io/github/u1234x1234/itertab?branch=master'><img src='https://coveralls.io/repos/github/u1234x1234/itertab/badge.svg?branch=master' alt='Coverage Status' /></a>
-  <img src="https://travis-ci.org/u1234x1234/itertab.svg?branch=master">
+  <a href='https://travis-ci.org/u1234x1234/itertab'><img src='https://travis-ci.org/u1234x1234/itertab.svg?branch=master' /></a>
 </div>
 
 - [Description](#description)
