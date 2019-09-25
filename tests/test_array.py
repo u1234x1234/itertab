@@ -45,13 +45,13 @@ def test_str():
 
 
 def test_diff():
-    assert PrettyArray([1, 4])._diffs == [None, '+300%']
-    assert PrettyArray([0.3, 0.03])._diffs == [None, '-90%']
-    assert PrettyArray([1, -3])._diffs == [None, '-400%']
-    assert PrettyArray([-0.3, -0.03])._diffs == [None, '+90%']
-    assert PrettyArray([-0.3, 0.03])._diffs == [None, '+110%']
+    assert PrettyArray([1, 4])._diffs == [None, '+300.00%']
+    assert PrettyArray([0.3, 0.03])._diffs == [None, '-90.00%']
+    assert PrettyArray([1, -3])._diffs == [None, '-400.00%']
+    assert PrettyArray([-0.3, -0.03])._diffs == [None, '+90.00%']
+    assert PrettyArray([-0.3, 0.03])._diffs == [None, '+110.00%']
     assert PrettyArray([0, 0])._diffs == [None, None]
-    assert PrettyArray([0.8, 0.2], direction='desc')._diffs == [None, '-75%']
+    assert PrettyArray([0.8, 0.2], direction='desc')._diffs == [None, '-75.00%']
 
 
 def test_incor():
@@ -61,4 +61,4 @@ def test_incor():
 
 def test_np():
     arr = PrettyArray([np.array([1]), np.array([2])])
-    assert arr._diffs == [None, '+100%']
+    assert arr._diffs == [None, '+100.00%']

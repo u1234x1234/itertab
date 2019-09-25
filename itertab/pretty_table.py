@@ -8,19 +8,17 @@ from .utils import OrderMatcher, flatten_dict
 
 
 class PrettyTable:
-    """Pretty formatted with order-reflecting colorized columns
+    """A pretty formatted table with colorized columns and highlighting.
     """
 
-    def __init__(self, tablefmt='psql', auto_datetime_fmt='%Y-%m-%d %H:%M:%S', headers=None):
+    def __init__(self, tablefmt='psql', auto_datetime_fmt='%Y-%m-%d %H:%M:%S', headers=[]):
         self.tablefmt = tablefmt
         self.auto_datetime_fmt = auto_datetime_fmt
 
         self._order_matcher = OrderMatcher()
 
-        self._headers = []
+        self._headers = headers
         self._columns = dict()
-
-        tabulate._format_table = self._format_table
 
     def add_row(self, row):
         row = flatten_dict(row)
@@ -35,10 +33,6 @@ class PrettyTable:
                 self._columns[key] = PrettyArray(direction=guessed_direction)
 
         [self._columns[key].add(value) for key, value in row.items()]
-
-    def _format_table(self, fmt, headers, rows, colwidths, colaligns, is_multiline):
-        r = default_format(fmt, headers, rows, colwidths, colaligns, is_multiline)
-        return r
 
     def get(self):
         rows = np.array([self._columns[key].get_colorized() for key in self._headers]).T

@@ -1,11 +1,28 @@
 from typing import List, Union
+import atexit
+import sys
 
 import numpy as np
 from colorama import Back, Fore, Style
 
 
 def float_to_string(value, n_digits_after_decimal=2):
-    return (f'%.{n_digits_after_decimal}f' % value).rstrip('0').rstrip('.')
+    return (f'%.{n_digits_after_decimal}f' % value)
+
+
+def is_int(value):
+    """Check whether the `value` is integer.
+
+    Args:
+        value: arbitrary type value
+    """
+    try:
+        if int(f'{value}') == int(value):
+            return True
+    except ValueError as e:
+        pass
+    
+    return False
 
 
 class PrettyArray:
@@ -36,6 +53,8 @@ class PrettyArray:
 
         for item in array:
             self.add(item)
+
+        atexit.register(self._cleanup) # Reset styling at exit
 
     def add(self, value):
         diff = None
@@ -87,10 +106,13 @@ class PrettyArray:
         for idx, (val, order_relation, ratio) in \
                 enumerate(zip(self._raw_values, self._order_relations, self._diffs)):
 
+            str_val = f'{val}'
             try:
-                val = float_to_string(float(val), 4)
-            except:
-                val = f'{val}'
+                if not is_int(val):
+                    str_val = float_to_string(float(val), 4)
+            except Exception as e:
+                pass
+            val = str_val
 
             if order_relation in modifiers_map:
 
@@ -107,6 +129,9 @@ class PrettyArray:
             colorized_array.append(val)
 
         return colorized_array
+
+    def _cleanup(self):
+        sys.stdout.write(Style.RESET_ALL)
 
     def __str__(self):
         return ', '.join(self.get_colorized())
