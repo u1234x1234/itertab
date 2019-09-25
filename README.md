@@ -1,9 +1,13 @@
-# itertab <!-- omit in toc --> 
+
+
+<div align="center" text-align="center">
+  <img src="media/demo.gif" itle="itertab">
+  <h2> itertab: pretty printed table </h2>
+</div>
 
 - [Description](#description)
 - [Usage](#usage)
 - [Installation](#installation)
-
 
 ## Description
 
@@ -36,9 +40,7 @@ for epoch in range(15):
     time.sleep(0.3)
 ```
 
-If you run `example.py` in the terminal you will get a similar output:
-
-![example](media/demo.gif)
+If you run `example.py` in the terminal you will get output similar to the one above.
 
 ## Installation
 
