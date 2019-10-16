@@ -12,9 +12,11 @@ from .utils import OrderMatcher, flatten_dict
 class PrettyTable:
     """A pretty formatted table with colorized columns and cell highlighting.
     """
-    def __init__(self, tablefmt='psql', auto_datetime_fmt='%Y-%m-%d %H:%M:%S', headers=None):
+    def __init__(self, tablefmt='psql', auto_datetime_fmt='%b/%d/%Y %H:%M:%S', headers=None,
+            highlight_best=True, show_diff=False): # TODO asc,desc option
         self.tablefmt = tablefmt
         self.auto_datetime_fmt = auto_datetime_fmt
+        self.show_diff = show_diff
 
         self._order_matcher = OrderMatcher()
 
@@ -26,13 +28,14 @@ class PrettyTable:
         row = flatten_dict(row)
 
         if self.auto_datetime_fmt:
-            row = {'dt': str(datetime.now().strftime(self.auto_datetime_fmt)), **row}
+            row = {'datetime': str(datetime.now().strftime(self.auto_datetime_fmt)), **row}
 
         for key in row.keys():
             if key not in self._headers:
                 self._headers.append(key)
                 predicted_direction = self._order_matcher.predict(key)
-                self._columns[key] = PrettyArray(direction=predicted_direction)
+                self._columns[key] = PrettyArray(
+                    direction=predicted_direction, show_percentage=self.show_diff)
 
         [self._columns[key].add(value) for key, value in row.items()]
 

@@ -45,7 +45,7 @@ class PrettyArray:
         self._order_relations = []
         self._diffs = []
 
-        self._min_idx = None
+        self._min_idx = None  # non-unique min values
         self._min_val = np.inf
 
         self._max_idx = None
@@ -61,9 +61,6 @@ class PrettyArray:
 
         try:
             float_value = float(value)
-            prev_value = float(self._raw_values[-1])
-
-            order = (float_value > prev_value) * 2 - 1  # map to {-1, 1}
 
             if float_value < self._min_val:
                 self._min_val = float_value
@@ -71,6 +68,9 @@ class PrettyArray:
             if float_value > self._max_val:
                 self._max_val = float_value
                 self._max_idx = len(self._raw_values)
+
+            prev_value = float(self._raw_values[-1])
+            order = (float_value > prev_value) * 2 - 1  # map to {-1, 1}
 
             if self.show_percentage:
                 diff = float_value / prev_value
@@ -85,7 +85,7 @@ class PrettyArray:
 
             order *= self.direction
 
-        except:
+        except Exception as e:
             order = 0
 
         self._raw_values.append(value)
@@ -114,17 +114,15 @@ class PrettyArray:
                 pass
             val = str_val
 
-            if order_relation in modifiers_map:
+            if self.show_percentage and ratio is not None:
+                val = '{} ({})'.format(val, ratio)
 
-                if self.show_percentage and ratio is not None:
-                    val = '{} ({})'.format(val, ratio)
-
-                if self.hightlight_max and idx == self._max_idx:
-                    val = background_modifiers_map[order_relation] + val + Style.RESET_ALL
-                elif self.hightlight_min and idx == self._min_idx:
-                    val = background_modifiers_map[order_relation] + val + Style.RESET_ALL
-                else:
-                    val = modifiers_map[order_relation] + val + Style.RESET_ALL
+            if self.hightlight_max and idx == self._max_idx:
+                val = background_modifiers_map[self.direction] + val + Style.RESET_ALL
+            elif self.hightlight_min and idx == self._min_idx:
+                val = background_modifiers_map[self.direction*-1] + val + Style.RESET_ALL
+            elif order_relation in modifiers_map:
+                val = modifiers_map[order_relation] + val + Style.RESET_ALL
 
             colorized_array.append(val)
 
