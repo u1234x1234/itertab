@@ -31,13 +31,24 @@ class PrettyTable:
             row = {'datetime': str(datetime.now().strftime(self.auto_datetime_fmt)), **row}
 
         for key in row.keys():
-            if key not in self._headers:
-                self._headers.append(key)
-                predicted_direction = self._order_matcher.predict(key)
-                self._columns[key] = PrettyArray(
-                    direction=predicted_direction, show_percentage=self.show_diff)
+            if len(key.split('___')) == 2:
+                column_name, fmt = key.split('___')
+            else:
+                column_name, fmt = key, None
 
-        [self._columns[key].add(value) for key, value in row.items()]
+            if column_name not in self._headers:
+                predicted_direction = self._order_matcher.predict(column_name)
+
+                if fmt:
+                    self._columns[column_name] = PrettyArray(
+                        direction=predicted_direction, show_percentage=self.show_diff, fmt=fmt)
+                else:
+                    self._columns[column_name] = PrettyArray(
+                        direction=predicted_direction, show_percentage=self.show_diff)
+
+                self._headers.append(column_name)
+
+            self._columns[column_name].add(row[key])
 
     def add_rows(self, rows):
         for row in rows:

@@ -1,6 +1,7 @@
 from typing import List, Union
 import atexit
 import sys
+from collections import Counter
 
 import numpy as np
 from colorama import Back, Fore, Style
@@ -27,6 +28,7 @@ def is_int(value):
 
 class PrettyArray:
     def __init__(self, array: List = [], direction: Union[str, None] = 'asc',
+                 fmt='{:.4f}', enable_colors=True,
                  hightlight_min=True, hightlight_max=True, hightlight_nan=True,
                  show_percentage=True):
 
@@ -36,6 +38,8 @@ class PrettyArray:
         if direction is None:
             self.direction = 0
 
+        self._fmt = fmt
+        self._enable_colors = enable_colors
         self.show_percentage = show_percentage
         self.hightlight_min = hightlight_min
         self.hightlight_max = hightlight_max
@@ -46,10 +50,12 @@ class PrettyArray:
         self._diffs = []
 
         self._min_idx = None  # non-unique min values
-        self._min_val = np.inf
+        self._min_val = None
 
         self._max_idx = None
-        self._max_val = -np.inf
+        self._max_val = None
+        self._conversion_errors = False
+        self._type_counter = Counter()
 
         for item in array:
             self.add(item)
@@ -60,20 +66,20 @@ class PrettyArray:
         diff = None
 
         try:
-            float_value = float(value)
+            self._type_counter[type(value)] += 1
 
-            if float_value < self._min_val:
-                self._min_val = float_value
+            if self._min_val is None or value < self._min_val:
+                self._min_val = value
                 self._min_idx = len(self._raw_values)
-            if float_value > self._max_val:
-                self._max_val = float_value
+            if self._max_val is None or value > self._max_val:
+                self._max_val = value
                 self._max_idx = len(self._raw_values)
 
-            prev_value = float(self._raw_values[-1])
-            order = (float_value > prev_value) * 2 - 1  # map to {-1, 1}
+            prev_value = self._raw_values[-1]
+            order = (value > prev_value) * 2 - 1  # map to {-1, 1}
 
             if self.show_percentage:
-                diff = float_value / prev_value
+                diff = float(value) / float(prev_value)
                 diff = diff - 1 if order == 1 else (1 - diff)
                 diff = 100. * abs(diff)
                 sign = ''
@@ -87,6 +93,7 @@ class PrettyArray:
 
         except Exception as e:
             order = 0
+            self._conversion_errors = True
 
         self._raw_values.append(value)
         self._order_relations.append(order)
@@ -103,26 +110,28 @@ class PrettyArray:
             -1: Back.LIGHTRED_EX,
         }
         colorized_array = []
+        if self._type_counter.get(str, 0) != 0:
+            self._enable_colors = False
+
         for idx, (val, order_relation, ratio) in \
                 enumerate(zip(self._raw_values, self._order_relations, self._diffs)):
 
-            str_val = f'{val}'
             try:
-                if not is_int(val):
-                    str_val = float_to_string(float(val), 4)
+                val = self._fmt.format(*val)
             except Exception as e:
-                pass
-            val = str_val
+                val = str(val)
 
             if self.show_percentage and ratio is not None:
                 val = '{} ({})'.format(val, ratio)
 
-            if self.hightlight_max and idx == self._max_idx:
-                val = background_modifiers_map[self.direction] + val + Style.RESET_ALL
-            elif self.hightlight_min and idx == self._min_idx:
-                val = background_modifiers_map[self.direction*-1] + val + Style.RESET_ALL
-            elif order_relation in modifiers_map:
-                val = modifiers_map[order_relation] + val + Style.RESET_ALL
+            # Colorization
+            if self._enable_colors and order_relation:
+                if self.hightlight_max and idx == self._max_idx:
+                    val = background_modifiers_map[self.direction] + val + Style.RESET_ALL
+                elif self.hightlight_min and idx == self._min_idx:
+                    val = background_modifiers_map[self.direction*-1] + val + Style.RESET_ALL
+                elif order_relation in modifiers_map:
+                    val = modifiers_map[order_relation] + val + Style.RESET_ALL
 
             colorized_array.append(val)
 

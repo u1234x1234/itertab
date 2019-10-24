@@ -62,3 +62,15 @@ def test_incor():
 def test_np():
     arr = PrettyArray([np.array([1]), np.array([2])])
     assert arr._diffs == [None, '+100.00%']
+
+
+def test_tuple_array_with_colorization():
+    arr = PrettyArray([(1, 1), (2, 5), (3, 5), (1, 5)], show_percentage=False, fmt='{:.2f}±{:.3f}')
+
+    assert str(arr).encode('utf-8') == b'1.00\xc2\xb11.000, \x1b[32m2.00\xc2\xb15.000\x1b[0m, \x1b[102m3.00\xc2\xb15.000\x1b[0m, \x1b[31m1.00\xc2\xb15.000\x1b[0m'
+
+
+def test_tuple_array():
+    arr = PrettyArray([(1, 1), (2, 5), (3, 5), (1, 5)], show_percentage=False, fmt='{:.2f}±{:.2f}', enable_colors=False)
+
+    assert str(arr) == '1.00±1.00, 2.00±5.00, 3.00±5.00, 1.00±5.00'

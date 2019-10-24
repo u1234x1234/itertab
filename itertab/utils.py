@@ -22,10 +22,12 @@ def _words_matcher(words):
 
 class OrderMatcher:
     def __init__(self):
-        asc_meanings = ['acc', 'prec', 'recall', 'f1', 'auc', 'quality']
-        desc_meanings = ['loss', 'entropy', 'divergence', 'error']
+        asc_meanings = ['acc', 'prec', 'recall', 'f1', 'auc', 'quality', 'iou']
+        desc_meanings = ['loss', 'entropy', 'divergence', 'error', 'time']
+        none_meanings = ['date']
         self._asc_pattern_matcher = _words_matcher(asc_meanings)
         self._desc_pattern_matcher = _words_matcher(desc_meanings)
+        self._none_pattern_matcher = _words_matcher(none_meanings)
 
     def predict(self, name):
         """Predict whether the `name` matches ascending or descending orders of improvements
@@ -34,4 +36,5 @@ class OrderMatcher:
             return 'asc'
         if self._desc_pattern_matcher.findall(name):
             return 'desc'
+
         return None
