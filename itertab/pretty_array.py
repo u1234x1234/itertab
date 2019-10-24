@@ -64,6 +64,7 @@ class PrettyArray:
 
     def add(self, value):
         diff = None
+        order = 0
 
         try:
             self._type_counter[type(value)] += 1
@@ -76,14 +77,18 @@ class PrettyArray:
                 self._max_idx = len(self._raw_values)
 
             prev_value = self._raw_values[-1]
-            order = (value > prev_value) * 2 - 1  # map to {-1, 1}
+            greater_than_prev = (value > prev_value)
+            if value == prev_value:
+                order = 0
+            else:
+                order = greater_than_prev * 2 - 1
 
             if self.show_percentage:
                 diff = float(value) / float(prev_value)
-                diff = diff - 1 if order == 1 else (1 - diff)
+                diff = diff - 1 if greater_than_prev else (1 - diff)
                 diff = 100. * abs(diff)
                 sign = ''
-                if order == 1:
+                if greater_than_prev:
                     sign = '+'
                 else:
                     sign = '-'
@@ -92,7 +97,6 @@ class PrettyArray:
             order *= self.direction
 
         except Exception as e:
-            order = 0
             self._conversion_errors = True
 
         self._raw_values.append(value)
@@ -113,6 +117,8 @@ class PrettyArray:
         if self._type_counter.get(str, 0) != 0:
             self._enable_colors = False
 
+        # print(self._min_idx, self._max_idx, self._order_relations)
+
         for idx, (val, order_relation, ratio) in \
                 enumerate(zip(self._raw_values, self._order_relations, self._diffs)):
 
@@ -125,12 +131,18 @@ class PrettyArray:
                 val = '{} ({})'.format(val, ratio)
 
             # Colorization
-            if self._enable_colors and order_relation:
-                if self.hightlight_max and idx == self._max_idx:
-                    val = background_modifiers_map[self.direction] + val + Style.RESET_ALL
-                elif self.hightlight_min and idx == self._min_idx:
-                    val = background_modifiers_map[self.direction*-1] + val + Style.RESET_ALL
-                elif order_relation in modifiers_map:
+            if self._enable_colors:
+                is_back_applied = False
+
+                if self.direction:
+                    if self.hightlight_max and idx == self._max_idx:
+                        val = background_modifiers_map[self.direction] + val + Style.RESET_ALL
+                        is_back_applied = True
+                    elif self.hightlight_min and idx == self._min_idx:
+                        val = background_modifiers_map[self.direction*-1] + val + Style.RESET_ALL
+                        is_back_applied = True
+
+                if order_relation and order_relation in modifiers_map and not is_back_applied:
                     val = modifiers_map[order_relation] + val + Style.RESET_ALL
 
             colorized_array.append(val)
