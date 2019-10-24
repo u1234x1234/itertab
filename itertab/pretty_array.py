@@ -117,15 +117,16 @@ class PrettyArray:
         if self._type_counter.get(str, 0) != 0:
             self._enable_colors = False
 
-        # print(self._min_idx, self._max_idx, self._order_relations)
-
         for idx, (val, order_relation, ratio) in \
                 enumerate(zip(self._raw_values, self._order_relations, self._diffs)):
 
-            try:
-                val = self._fmt.format(*val)
-            except Exception as e:
-                val = str(val)
+            if val is None:
+                val = ''
+            else:
+                try:
+                    val = self._fmt.format(*val)
+                except Exception as e:
+                    val = str(val)
 
             if self.show_percentage and ratio is not None:
                 val = '{} ({})'.format(val, ratio)

@@ -23,6 +23,13 @@ class PrettyTable:
         self._headers = headers if headers is not None else []
         self._columns = dict()
         self._terminal = Terminal()
+        self._row_idx = 0
+
+    # def _process_headers(self):
+        # return [k.split('___')[0] for k in self._headers]
+    @staticmethod
+    def process_name(key):
+        return key.split('___')[0]
 
     def add_row(self, row):
         row = flatten_dict(row)
@@ -40,15 +47,19 @@ class PrettyTable:
                 predicted_direction = self._order_matcher.predict(column_name)
 
                 if fmt:
-                    self._columns[column_name] = PrettyArray(
-                        direction=predicted_direction, show_percentage=self.show_diff, fmt=fmt)
+                    arr = PrettyArray(direction=predicted_direction, show_percentage=self.show_diff, fmt=fmt)
                 else:
-                    self._columns[column_name] = PrettyArray(
-                        direction=predicted_direction, show_percentage=self.show_diff)
+                    arr = PrettyArray(direction=predicted_direction, show_percentage=self.show_diff)
 
-                self._headers.append(column_name)
+                # Fill array with None to ensure that all arrays are the same length
+                [arr.add(None) for _ in range(self._row_idx)]
+                self._columns[column_name] = arr
+                self._headers.append(key)
 
-            self._columns[column_name].add(row[key])
+        for column_name in self._headers:
+            self._columns[self.process_name(column_name)].add(row.get(column_name, None))
+
+        self._row_idx += 1
 
     def add_rows(self, rows):
         for row in rows:

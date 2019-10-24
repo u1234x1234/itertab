@@ -39,3 +39,28 @@ def test_to_csv():
         r = in_file.read()
 
     assert 'm1,m2\n1,1\n2,2' == r.strip()
+
+
+def test_empty_cells():
+
+    gt = """+----------+-----------+
+| asdasd   | new_row   |
+|----------+-----------|
+| 1        |           |
+| 2        | 123       |
+| 3        | 3535      |
+|          | 3535      |
++----------+-----------+"""
+
+
+    table = PrettyTable(auto_datetime_fmt=None)
+
+    rows = [
+        {'asdasd': 1},
+        {'asdasd': 2, 'new_row': 123},
+        {'asdasd': 3, 'new_row': 3535},
+        {'new_row': 3535},
+    ]
+
+    table.add_rows(rows)
+    assert str(table) == gt
