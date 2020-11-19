@@ -25,8 +25,6 @@ class PrettyTable:
         self._terminal = Terminal()
         self._row_idx = 0
 
-    # def _process_headers(self):
-        # return [k.split('___')[0] for k in self._headers]
     @staticmethod
     def process_name(key):
         return key.split('___')[0]
@@ -43,7 +41,7 @@ class PrettyTable:
             else:
                 column_name, fmt = key, None
 
-            if column_name not in self._headers:
+            if key not in self._headers:
                 predicted_direction = self._order_matcher.predict(column_name)
 
                 if fmt:
@@ -66,14 +64,22 @@ class PrettyTable:
             self.add_row(row)
 
     def get_string_representation(self):
-        rows = np.array([self._columns[key].get_colorized() for key in self._headers]).T
-        table_str = tabulate(rows, headers=self._headers, tablefmt=self.tablefmt)
+        headers = [self.process_name(x) for x in self._headers]
+        rows = np.array([self._columns[key].get_colorized() for key in headers]).T
+        table_str = tabulate(rows, headers=headers, tablefmt=self.tablefmt)
         return table_str
 
     def to_csv(self, path):
         rows = np.array([self._columns[key].get_raw_array() for key in self._headers]).T
         data_frame = pd.DataFrame(rows, columns=self._headers)
         data_frame.to_csv(path, index=False)
+
+    def to_txt(self, path):
+        headers = [self.process_name(x) for x in self._headers]
+        rows = np.array([self._columns[key].get_raw_array() for key in headers]).T
+        table_str = tabulate(rows, headers=headers, tablefmt=self.tablefmt)
+        with open(path, 'w') as out_file:
+            print(table_str, file=out_file)
 
     def clear_screen_and_print(self):
         print(self._terminal.clear, flush=True)

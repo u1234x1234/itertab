@@ -2,8 +2,6 @@
 import atexit
 import sys
 
-from blessings import Terminal
-
 from .pretty_table import PrettyTable
 
 CLEAR = '\033[K'

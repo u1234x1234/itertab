@@ -16,14 +16,39 @@ def flatten_dict(d):
 def _words_matcher(words):
     """Construct a regexp that matches any of `words`
     """
-    reg_exp = '|'.join('(?={})'.format(word) for word in words)
+    reg_exp = '|'.join('{}'.format(word) for word in words)
     return re.compile(reg_exp, re.I)
 
 
 class OrderMatcher:
     def __init__(self):
-        asc_meanings = ['acc', 'prec', 'recall', 'f1', 'auc', 'quality', 'iou']
-        desc_meanings = ['loss', 'entropy', 'divergence', 'error', 'time']
+        asc_meanings = [
+            "acc",
+            "prec",
+            "recall",
+            "f1",
+            "auc",
+            "quality",
+            "iou",
+            "map",
+            "dice",
+            "jaccard",
+            "score",
+        ]
+        desc_meanings = [
+            "loss",
+            "entropy",
+            "ce",
+            "divergence",
+            "error",
+            "time",
+            "bpc",
+            "bpb",
+            "bit_per",
+            "bit per",
+            "chi",
+            "mape",
+        ]
         none_meanings = ['date']
         self._asc_pattern_matcher = _words_matcher(asc_meanings)
         self._desc_pattern_matcher = _words_matcher(desc_meanings)
@@ -32,9 +57,18 @@ class OrderMatcher:
     def predict(self, name):
         """Predict whether the `name` matches ascending or descending orders of improvements
         """
-        if self._asc_pattern_matcher.findall(name):
-            return 'asc'
-        if self._desc_pattern_matcher.findall(name):
-            return 'desc'
+        r1 = self._asc_pattern_matcher.findall(name)
+        r2 = self._desc_pattern_matcher.findall(name)
+        matches = []
+        for x in r1:
+            matches.append((len(x), 0))
+        for x in r2:
+            matches.append((len(x), 1))
+        matches = sorted(matches, key=lambda x: -x[0])
+        if matches:
+            if matches[0][1] == 0:
+                return "asc"
+            else:
+                return "desc"
 
         return None
