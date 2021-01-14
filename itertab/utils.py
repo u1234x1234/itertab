@@ -48,6 +48,8 @@ class OrderMatcher:
             "bit per",
             "chi",
             "mape",
+            "mse",
+            "mae",
         ]
         none_meanings = ["date"]
         self._asc_pattern_matcher = _words_matcher(asc_meanings)

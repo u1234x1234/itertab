@@ -1,14 +1,13 @@
-from typing import List, Union
 import atexit
 import sys
 from collections import Counter
-
+from typing import List, Union
 import numpy as np
 from colorama import Back, Fore, Style
 
 
 def float_to_string(value, n_digits_after_decimal=2):
-    return (f'%.{n_digits_after_decimal}f' % value)
+    return f"%.{n_digits_after_decimal}f" % value
 
 
 def is_int(value):
@@ -18,7 +17,7 @@ def is_int(value):
         value: arbitrary type value
     """
     try:
-        if int(f'{value}') == int(value):
+        if int(f"{value}") == int(value):
             return True
     except ValueError as e:
         pass
@@ -27,14 +26,21 @@ def is_int(value):
 
 
 class PrettyArray:
-    def __init__(self, array: List = [], direction: Union[str, None] = 'asc',
-                 fmt='{:.4f}', enable_colors=True,
-                 hightlight_min=True, hightlight_max=True, hightlight_nan=True,
-                 show_percentage=True):
+    def __init__(
+        self,
+        array: List = [],
+        direction: Union[str, None] = "asc",
+        fmt="{:.4f}",
+        enable_colors=True,
+        hightlight_min=True,
+        hightlight_max=True,
+        hightlight_nan=True,
+        show_percentage=True,
+    ):
 
-        if direction not in ['asc', 'desc', None]:
+        if direction not in ["asc", "desc", None]:
             raise ValueError('Direction should be in ["asc", "desc", None]')
-        self.direction = 1 if direction == 'asc' else -1
+        self.direction = 1 if direction == "asc" else -1
         if direction is None:
             self.direction = 0
 
@@ -60,7 +66,7 @@ class PrettyArray:
         for item in array:
             self.add(item)
 
-        atexit.register(self._cleanup) # Reset styling at exit
+        atexit.register(self._cleanup)  # Reset styling at exit
 
     def add(self, value):
         diff = None
@@ -77,7 +83,7 @@ class PrettyArray:
                 self._max_idx = len(self._raw_values)
 
             prev_value = self._raw_values[-1]
-            greater_than_prev = (value > prev_value)
+            greater_than_prev = value > prev_value
             if value == prev_value:
                 order = 0
             else:
@@ -86,13 +92,13 @@ class PrettyArray:
             if self.show_percentage:
                 diff = float(value) / float(prev_value)
                 diff = diff - 1 if greater_than_prev else (1 - diff)
-                diff = 100. * abs(diff)
-                sign = ''
+                diff = 100.0 * abs(diff)
+                sign = ""
                 if greater_than_prev:
-                    sign = '+'
+                    sign = "+"
                 else:
-                    sign = '-'
-                diff = '{}{}%'.format(sign, float_to_string(diff))
+                    sign = "-"
+                diff = "{}{}%".format(sign, float_to_string(diff))
 
             order *= self.direction
 
@@ -117,11 +123,12 @@ class PrettyArray:
         if self._type_counter.get(str, 0) != 0:
             self._enable_colors = False
 
-        for idx, (val, order_relation, ratio) in \
-                enumerate(zip(self._raw_values, self._order_relations, self._diffs)):
+        for idx, (val, order_relation, ratio) in enumerate(
+            zip(self._raw_values, self._order_relations, self._diffs)
+        ):
 
             if val is None:
-                val = ''
+                val = ""
             else:
                 try:
                     val = self._fmt.format(*val)
@@ -129,7 +136,7 @@ class PrettyArray:
                     val = str(val)
 
             if self.show_percentage and ratio is not None:
-                val = '{} ({})'.format(val, ratio)
+                val = "{} ({})".format(val, ratio)
 
             # Colorization
             if self._enable_colors:
@@ -137,13 +144,25 @@ class PrettyArray:
 
                 if self.direction:
                     if self.hightlight_max and idx == self._max_idx:
-                        val = background_modifiers_map[self.direction] + val + Style.RESET_ALL
+                        val = (
+                            background_modifiers_map[self.direction]
+                            + val
+                            + Style.RESET_ALL
+                        )
                         is_back_applied = True
                     elif self.hightlight_min and idx == self._min_idx:
-                        val = background_modifiers_map[self.direction*-1] + val + Style.RESET_ALL
+                        val = (
+                            background_modifiers_map[self.direction * -1]
+                            + val
+                            + Style.RESET_ALL
+                        )
                         is_back_applied = True
 
-                if order_relation and order_relation in modifiers_map and not is_back_applied:
+                if (
+                    order_relation
+                    and order_relation in modifiers_map
+                    and not is_back_applied
+                ):
                     val = modifiers_map[order_relation] + val + Style.RESET_ALL
 
             colorized_array.append(val)
@@ -157,4 +176,25 @@ class PrettyArray:
         sys.stdout.write(Style.RESET_ALL)
 
     def __str__(self):
-        return ', '.join(self.get_colorized())
+        return ", ".join(self.get_colorized())
+
+
+def _get_avg(arr, alg):
+    if alg == "ma_5":
+        return np.mean(arr[-5:])
+    else:
+        raise NotImplementedError()
+
+
+class AvgArray(PrettyArray):
+    "PrettyArray + averaging (moving average, exponential)"
+
+    def __init__(self, alg="ma_5", *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._data = []
+        self._alg = alg
+
+    def add(self, value):
+        self._data.append(value)
+        value = _get_avg(self._data, self._alg)
+        super().add(value)
